@@ -14,7 +14,7 @@ import {
   ToolExecuteConfirmationDetails,
   ToolMcpConfirmationDetails,
   Config,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import {
   RadioButtonSelect,
   RadioSelectItem,

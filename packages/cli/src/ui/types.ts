@@ -7,7 +7,7 @@
 import {
   ToolCallConfirmationDetails,
   ToolResultDisplay,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 
 // Only defining the state enum needed by the UI
 export enum StreamingState {
@@ -239,7 +239,7 @@ export interface SubmitPromptResult {
 }
 
 /**
- * Defines the result of the slash command processor for its consumer (useGeminiStream).
+ * Defines the result of the slash command processor for its consumer (useNomaStream).
  */
 export type SlashCommandProcessorResult =
   | {

@@ -13,7 +13,7 @@ import {
   getErrorMessage,
   isNodeError,
   unescapePath,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import {
   HistoryItem,
   IndividualToolCallDisplay,

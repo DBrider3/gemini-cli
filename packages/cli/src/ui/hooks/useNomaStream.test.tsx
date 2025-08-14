@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useGeminiStream, mergePartListUnions } from './useGeminiStream.js';
+import { useNomaStream, mergePartListUnions } from './useNomaStream.js';
 import { useKeypress } from './useKeypress.js';
 import {
   useReactToolScheduler,
@@ -22,7 +22,7 @@ import {
   AuthType,
   GeminiEventType as ServerGeminiEventType,
   AnyToolInvocation,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import { Part, PartListUnion } from '@google/genai';
 import { UseHistoryManagerReturn } from './useHistoryManager.js';
 import {
@@ -52,7 +52,7 @@ const MockedUserPromptEvent = vi.hoisted(() =>
   vi.fn().mockImplementation(() => {}),
 );
 
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+vi.mock('@noma/noma-cli-core', async (importOriginal) => {
   const actualCoreModule = (await importOriginal()) as any;
   return {
     ...actualCoreModule,
@@ -253,8 +253,8 @@ describe('mergePartListUnions', () => {
   });
 });
 
-// --- Tests for useGeminiStream Hook ---
-describe('useGeminiStream', () => {
+// --- Tests for useNomaStream Hook ---
+describe('useNomaStream', () => {
   let mockAddItem: Mock;
   let mockConfig: Config;
   let mockOnDebugMessage: Mock;
@@ -392,7 +392,7 @@ describe('useGeminiStream', () => {
         if (props.toolCalls) {
           setToolCalls(props.toolCalls);
         }
-        return useGeminiStream(
+        return useNomaStream(
           props.client,
           props.history,
           props.addItem,
@@ -548,7 +548,7 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
+      useNomaStream(
         new MockedGeminiClientClass(mockConfig),
         [],
         mockAddItem,
@@ -623,7 +623,7 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
+      useNomaStream(
         client,
         [],
         mockAddItem,
@@ -729,7 +729,7 @@ describe('useGeminiStream', () => {
     });
 
     renderHook(() =>
-      useGeminiStream(
+      useNomaStream(
         client,
         [],
         mockAddItem,
@@ -837,7 +837,7 @@ describe('useGeminiStream', () => {
     });
 
     const { result, rerender } = renderHook(() =>
-      useGeminiStream(
+      useNomaStream(
         new MockedGeminiClientClass(mockConfig),
         [],
         mockAddItem,
@@ -966,7 +966,7 @@ describe('useGeminiStream', () => {
       mockSendMessageStream.mockReturnValue(mockStream);
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           mockConfig.getGeminiClient(),
           [],
           mockAddItem,
@@ -1240,7 +1240,7 @@ describe('useGeminiStream', () => {
       });
 
       renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1293,7 +1293,7 @@ describe('useGeminiStream', () => {
       } as unknown as Config;
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(testConfig),
           [],
           mockAddItem,
@@ -1343,7 +1343,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1391,7 +1391,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1440,7 +1440,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1529,7 +1529,7 @@ describe('useGeminiStream', () => {
         );
 
         const { result } = renderHook(() =>
-          useGeminiStream(
+          useNomaStream(
             new MockedGeminiClientClass(mockConfig),
             [],
             mockAddItem,
@@ -1585,7 +1585,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1663,7 +1663,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,
@@ -1717,7 +1717,7 @@ describe('useGeminiStream', () => {
       );
 
       const { result } = renderHook(() =>
-        useGeminiStream(
+        useNomaStream(
           new MockedGeminiClientClass(mockConfig),
           [],
           mockAddItem,

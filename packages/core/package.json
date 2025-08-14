@@ -1,10 +1,10 @@
 {
-  "name": "@google/gemini-cli-core",
+  "name": "@noma/noma-cli-core",
   "version": "0.1.19",
-  "description": "Gemini CLI Core",
+  "description": "Noma CLI Core",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/google-gemini/gemini-cli.git"
+    "url": "git+https://github.com/DBrider3/noma-cli.git"
   },
   "type": "module",
   "main": "dist/index.js",
@@ -53,7 +53,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@google/gemini-cli-test-utils": "file:../test-utils",
+    "@noma/noma-cli-test-utils": "file:../test-utils",
     "@types/diff": "^7.0.2",
     "@types/dotenv": "^6.1.1",
     "@types/micromatch": "^4.0.8",

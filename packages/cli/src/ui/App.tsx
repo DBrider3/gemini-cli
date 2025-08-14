@@ -16,7 +16,7 @@ import {
 } from 'ink';
 import { StreamingState, type HistoryItem, MessageType } from './types.js';
 import { useTerminalSize } from './hooks/useTerminalSize.js';
-import { useGeminiStream } from './hooks/useGeminiStream.js';
+import { useNomaStream } from './hooks/useNomaStream.js';
 import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
 import { useThemeCommand } from './hooks/useThemeCommand.js';
 import { useAuthCommand } from './hooks/useAuthCommand.js';
@@ -61,7 +61,7 @@ import {
   AuthType,
   type IdeContext,
   ideContext,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import {
   IdeIntegrationNudge,
   IdeIntegrationNudgeResult,
@@ -87,7 +87,7 @@ import {
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   UserTierId,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import { UpdateObject } from './utils/updateCheck.js';
 import ansiEscapes from 'ansi-escapes';
 import { OverflowProvider } from './contexts/OverflowContext.js';
@@ -545,7 +545,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     pendingHistoryItems: pendingGeminiHistoryItems,
     thought,
     cancelOngoingRequest,
-  } = useGeminiStream(
+  } = useNomaStream(
     config.getGeminiClient(),
     history,
     addItem,

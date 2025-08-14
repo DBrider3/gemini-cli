@@ -7,7 +7,7 @@
 import {
   getErrorMessage,
   loadServerHierarchicalMemory,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import { MessageType } from '../types.js';
 import {
   CommandKind,

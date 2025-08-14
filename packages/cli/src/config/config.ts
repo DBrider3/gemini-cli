@@ -27,7 +27,7 @@ import {
   EditTool,
   WriteFileTool,
   MCPServerConfig,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import { Settings } from './settings.js';
 
 import { Extension, annotateActiveExtensions } from './extension.js';
@@ -74,11 +74,11 @@ export interface CliArgs {
 
 export async function parseArguments(): Promise<CliArgs> {
   const yargsInstance = yargs(hideBin(process.argv))
-    .scriptName('gemini')
+    .scriptName('noma')
     .usage(
-      'Usage: gemini [options] [command]\n\nGemini CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      'Usage: noma [options] [command]\n\nNoma CLI - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
-    .command('$0', 'Launch Gemini CLI', (yargsInstance) =>
+    .command('$0', 'Launch Noma CLI', (yargsInstance) =>
       yargsInstance
         .option('model', {
           alias: 'm',
@@ -209,7 +209,7 @@ export async function parseArguments(): Promise<CliArgs> {
         .option('proxy', {
           type: 'string',
           description:
-            'Proxy for gemini client, like schema://user:password@host:port',
+            'Proxy for noma client, like schema://user:password@host:port',
         })
         .option('include-directories', {
           type: 'array',

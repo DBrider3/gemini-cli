@@ -17,10 +17,10 @@ import {
   GeminiClient,
   ideContext,
   type AuthType,
-} from '@google/gemini-cli-core';
+} from '@noma/noma-cli-core';
 import { LoadedSettings, SettingsFile, Settings } from '../config/settings.js';
 import process from 'node:process';
-import { useGeminiStream } from './hooks/useGeminiStream.js';
+import { useNomaStream } from './hooks/useNomaStream.js';
 import { useConsoleMessages } from './hooks/useConsoleMessages.js';
 import { StreamingState, ConsoleMessageItem } from './types.js';
 import { Tips } from './components/Tips.js';
@@ -89,10 +89,10 @@ interface MockServerConfig {
   getIdeClient: Mock<() => { getCurrentIde: Mock<() => string | undefined> }>;
 }
 
-// Mock @google/gemini-cli-core and its Config class
-vi.mock('@google/gemini-cli-core', async (importOriginal) => {
+// Mock @noma/noma-cli-core and its Config class
+vi.mock('@noma/noma-cli-core', async (importOriginal) => {
   const actualCore =
-    await importOriginal<typeof import('@google/gemini-cli-core')>();
+    await importOriginal<typeof import('@noma/noma-cli-core')>();
   const ConfigClassMock = vi
     .fn()
     .mockImplementation((optionsPassedToConstructor) => {
@@ -182,8 +182,8 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
 });
 
 // Mock heavy dependencies or those with side effects
-vi.mock('./hooks/useGeminiStream', () => ({
-  useGeminiStream: vi.fn(() => ({
+vi.mock('./hooks/useNomaStream', () => ({
+  useNomaStream: vi.fn(() => ({
     streamingState: 'Idle',
     submitQuery: vi.fn(),
     initError: null,
@@ -257,7 +257,7 @@ vi.mock('../hooks/useTerminalSize.js', () => ({
 
 const mockedCheckForUpdates = vi.mocked(checkForUpdates);
 const { isGitRepository: mockedIsGitRepository } = vi.mocked(
-  await import('@google/gemini-cli-core'),
+  await import('@noma/noma-cli-core'),
 );
 
 vi.mock('node:child_process');
@@ -939,7 +939,7 @@ describe('App UI', () => {
   });
 
   it('should render correctly with the prompt input box', () => {
-    vi.mocked(useGeminiStream).mockReturnValue({
+    vi.mocked(useNomaStream).mockReturnValue({
       streamingState: StreamingState.Idle,
       submitQuery: vi.fn(),
       initError: null,
@@ -964,7 +964,7 @@ describe('App UI', () => {
 
       mockConfig.getQuestion = vi.fn(() => 'hello from prompt-interactive');
 
-      vi.mocked(useGeminiStream).mockReturnValue({
+      vi.mocked(useNomaStream).mockReturnValue({
         streamingState: StreamingState.Idle,
         submitQuery: mockSubmitQuery,
         initError: null,

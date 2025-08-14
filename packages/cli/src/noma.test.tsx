@@ -10,7 +10,7 @@ import {
   main,
   setupUnhandledRejectionHandler,
   validateDnsResolutionOrder,
-} from './gemini.js';
+} from './noma.js';
 import {
   LoadedSettings,
   SettingsFile,

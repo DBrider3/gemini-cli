@@ -1,13 +1,13 @@
 {
-  "name": "gemini-cli-vscode-ide-companion",
-  "displayName": "Gemini CLI Companion",
-  "description": "Enable Gemini CLI with direct access to your VS Code workspace.",
+  "name": "noma-cli-vscode-ide-companion",
+  "displayName": "Noma CLI Companion",
+  "description": "Enable Noma CLI with direct access to your VS Code workspace.",
   "version": "0.1.19",
   "publisher": "google",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/google-gemini/gemini-cli.git",
+    "url": "https://github.com/DBrider3/noma-cli.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -19,10 +19,10 @@
     "AI"
   ],
   "keywords": [
-    "gemini-cli",
-    "gemini cli",
-    "gemini",
-    "gemini code",
+    "noma-cli",
+    "noma cli",
+    "noma",
+    "noma code",
     "cli",
     "ide integration",
     "ide companion"
@@ -33,63 +33,63 @@
   "contributes": {
     "languages": [
       {
-        "id": "gemini-diff-editable"
+        "id": "noma-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "gemini.diff.accept",
-        "title": "Gemini CLI: Accept Diff",
+        "command": "noma.diff.accept",
+        "title": "Noma CLI: Accept Diff",
         "icon": "$(check)"
       },
       {
-        "command": "gemini.diff.cancel",
-        "title": "Gemini CLI: Close Diff Editor",
+        "command": "noma.diff.cancel",
+        "title": "Noma CLI: Close Diff Editor",
         "icon": "$(close)"
       },
       {
-        "command": "gemini-cli.runGeminiCLI",
-        "title": "Gemini CLI: Run"
+        "command": "noma-cli.runNomaCLI",
+        "title": "Noma CLI: Run"
       },
       {
-        "command": "gemini-cli.showNotices",
-        "title": "Gemini CLI: View Third-Party Notices"
+        "command": "noma-cli.showNotices",
+        "title": "Noma CLI: View Third-Party Notices"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "gemini.diff.accept",
-          "when": "gemini.diff.isVisible"
+          "command": "noma.diff.accept",
+          "when": "noma.diff.isVisible"
         },
         {
-          "command": "gemini.diff.cancel",
-          "when": "gemini.diff.isVisible"
+          "command": "noma.diff.cancel",
+          "when": "noma.diff.isVisible"
         }
       ],
       "editor/title": [
         {
-          "command": "gemini.diff.accept",
-          "when": "gemini.diff.isVisible",
+          "command": "noma.diff.accept",
+          "when": "noma.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "gemini.diff.cancel",
-          "when": "gemini.diff.isVisible",
+          "command": "noma.diff.cancel",
+          "when": "noma.diff.isVisible",
           "group": "navigation"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "gemini.diff.accept",
+        "command": "noma.diff.accept",
         "key": "ctrl+s",
-        "when": "gemini.diff.isVisible"
+        "when": "noma.diff.isVisible"
       },
       {
-        "command": "gemini.diff.accept",
+        "command": "noma.diff.accept",
         "key": "cmd+s",
-        "when": "gemini.diff.isVisible"
+        "when": "noma.diff.isVisible"
       }
     ]
   },

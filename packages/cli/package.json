@@ -1,15 +1,15 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "@noma/noma-cli",
   "version": "0.1.19",
-  "description": "Gemini CLI",
+  "description": "Noma CLI",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/google-gemini/gemini-cli.git"
+    "url": "git+https://github.com/DBrider3/noma-cli.git"
   },
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "gemini": "dist/index.js"
+    "noma": "dist/index.js"
   },
   "scripts": {
     "build": "node ../../scripts/build_package.js",
@@ -25,10 +25,10 @@
     "dist"
   ],
   "config": {
-    "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.1.19"
+    "sandboxImageUri": "us-docker.pkg.dev/noma-code-dev/noma-cli/sandbox:0.1.19"
   },
   "dependencies": {
-    "@google/gemini-cli-core": "file:../core",
+    "@noma/noma-cli-core": "file:../core",
     "@google/genai": "1.9.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.15.1",
@@ -76,7 +76,7 @@
     "react-dom": "^19.1.0",
     "typescript": "^5.3.3",
     "vitest": "^3.1.1",
-    "@google/gemini-cli-test-utils": "file:../test-utils"
+    "@noma/noma-cli-test-utils": "file:../test-utils"
   },
   "engines": {
     "node": ">=20"
