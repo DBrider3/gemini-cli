@@ -190,7 +190,7 @@ export default CounterButton;
 ### 환경 구성
 - **API 서버**: http://123.41.22.111:8001/v1 (OpenAI 호환)
 - **인증**: 환경변수 기반 (.env 파일)
-- **모델**: gpt-4o-mini (기본값)
+- **모델**: google/gemma-3-27b-it
 
 ### 성능 지표
 - **응답 시작 시간**: ~1-2초
