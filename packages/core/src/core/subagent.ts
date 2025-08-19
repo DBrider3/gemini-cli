@@ -11,15 +11,29 @@ import { ToolCallRequestInfo } from './turn.js';
 import { executeToolCall } from './nonInteractiveToolExecutor.js';
 import { createContentGenerator } from './contentGenerator.js';
 import { getEnvironmentContext } from '../utils/environmentContext.js';
-import {
-  Content,
-  Part,
-  FunctionCall,
-  GenerateContentConfig,
-  FunctionDeclaration,
-  Type,
-} from '@google/genai';
-import { GeminiChat } from './geminiChat.js';
+import { NomaChat } from './nomaChat.js';
+import { NomaContent } from './contentGenerator.js';
+
+// Type aliases for compatibility
+type Content = NomaContent;
+type Part = { text?: string };
+type FunctionCall = {
+  id?: string;
+  name: string;
+  args?: Record<string, unknown>;
+};
+type GenerateContentConfig = {
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  systemInstruction?: { text: string };
+};
+type FunctionDeclaration = {
+  name: string;
+  description?: string;
+  parameters?: Record<string, unknown>;
+};
+type Type = string;
 
 /**
  * @fileoverview Defines the configuration interfaces for a subagent.
@@ -595,7 +609,7 @@ export class SubAgentScope {
 
       this.runtimeContext.setModel(this.modelConfig.model);
 
-      return new GeminiChat(
+      return new NomaChat(
         this.runtimeContext,
         contentGenerator,
         generationConfig,

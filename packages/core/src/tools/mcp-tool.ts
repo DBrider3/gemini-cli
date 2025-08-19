@@ -12,7 +12,7 @@ import {
   ToolMcpConfirmationDetails,
   Icon,
 } from './tools.js';
-import { CallableTool, Part, FunctionCall } from '@google/genai';
+import { CallableTool, Part, FunctionCall } from '../core/contentGenerator.js';
 
 type ToolParams = Record<string, unknown>;
 

@@ -12,7 +12,7 @@ import {
   ToolResult,
   Config,
 } from '../index.js';
-import { Part } from '@google/genai';
+import { Part } from '../core/contentGenerator.js';
 import { MockTool } from '../test-utils/tools.js';
 
 const mockConfig = {

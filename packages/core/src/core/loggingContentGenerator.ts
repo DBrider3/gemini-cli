@@ -13,7 +13,7 @@ import {
   GenerateContentParameters,
   GenerateContentResponseUsageMetadata,
   GenerateContentResponse,
-} from '@google/genai';
+} from '../core/contentGenerator.js';
 import {
   ApiRequestEvent,
   ApiResponseEvent,

@@ -369,7 +369,7 @@ export class ShellTool extends BaseTool<ShellToolParams, ToolResult> {
       if (summarizeConfig && summarizeConfig[this.name]) {
         const summary = await summarizeToolOutput(
           llmContent,
-          this.config.getGeminiClient(),
+          this.config.getNomaClient(),
           signal,
           summarizeConfig[this.name].tokenBudget,
         );

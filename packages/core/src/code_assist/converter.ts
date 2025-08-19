@@ -26,7 +26,7 @@ import {
   ThinkingConfig,
   ToolListUnion,
   ToolConfig,
-} from '@google/genai';
+} from '../core/contentGenerator.js';
 
 export interface CAGenerateContentRequest {
   model: string;

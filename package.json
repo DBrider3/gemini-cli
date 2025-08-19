@@ -8,7 +8,6 @@
   "workspaces": [
     "packages/*"
   ],
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DBrider3/noma-cli.git"
@@ -91,6 +90,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
+    "@google/genai": "^1.14.0",
     "node-fetch": "^3.3.2"
   }
 }

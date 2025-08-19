@@ -6,7 +6,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { PartUnion } from '@google/genai';
+// Type alias for compatibility
+type PartUnion = { text?: string } | string;
 import mime from 'mime-types';
 
 // Constants for text file processing

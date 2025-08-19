@@ -16,7 +16,7 @@ import {
 import { Logger, MessageSenderType, LogEntry } from './logger.js';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { Content } from '@google/genai';
+import { Content } from '../core/contentGenerator.js';
 
 import crypto from 'node:crypto';
 import os from 'node:os';

@@ -5,42 +5,41 @@
  */
 
 import {
-  EmbedContentParameters,
-  GenerateContentConfig,
-  PartListUnion,
-  Content,
-  Tool,
-  GenerateContentResponse,
-} from '@google/genai';
+  NomaEmbedContentParameters,
+  NomaGenerateContentParameters,
+  NomaContent,
+  NomaGenerateContentResponse,
+  AuthType,
+  ContentGenerator,
+  ContentGeneratorConfig,
+  createContentGenerator,
+  UserTierId,
+} from './contentGenerator.js';
 import {
   getDirectoryContextString,
   getEnvironmentContext,
 } from '../utils/environmentContext.js';
 import {
   Turn,
-  ServerGeminiStreamEvent,
-  GeminiEventType,
+  ServerNomaStreamEvent,
+  NomaEventType,
   ChatCompressionInfo,
 } from './turn.js';
 import { Config } from '../config/config.js';
-import { UserTierId } from '../code_assist/types.js';
-import { getCoreSystemPrompt, getCompressionPrompt } from './prompts.js';
+// import { UserTierId } from '../code_assist/types.js'; // Temporarily disabled
+// import { getCoreSystemPrompt, getCompressionPrompt } from './prompts.js';
+// Temporary stub functions
+const getCoreSystemPrompt = (userMemory: string) => `You are Claude Code, an AI assistant. ${userMemory}`;
+const getCompressionPrompt = () => 'Please summarize the conversation.';
 import { getResponseText } from '../utils/generateContentResponseUtilities.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
 import { reportError } from '../utils/errorReporting.js';
-import { GeminiChat } from './geminiChat.js';
+import { NomaChat } from './nomaChat.js';
 import { retryWithBackoff } from '../utils/retry.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
 import { tokenLimit } from './tokenLimits.js';
-import {
-  AuthType,
-  ContentGenerator,
-  ContentGeneratorConfig,
-  createContentGenerator,
-} from './contentGenerator.js';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { LoopDetectionService } from '../services/loopDetectionService.js';
 import { ideContext } from '../ide/ideContext.js';
 import { logNextSpeakerCheck } from '../telemetry/loggers.js';
@@ -51,8 +50,34 @@ import {
 import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js';
 import { IdeContext, File } from '../ide/ideContext.js';
 
+// OpenAI compatible types for function signatures
+type PartListUnion = { text: string }[];
+type Content = NomaContent;
+type GenerateContentResponse = NomaGenerateContentResponse;
+type GenerateContentParameters = NomaGenerateContentParameters;
+type EmbedContentParameters = NomaEmbedContentParameters;
+type GenerateContentConfig = {
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  systemInstruction?: { text: string };
+  responseJsonSchema?: Record<string, unknown>;
+  responseMimeType?: string;
+  abortSignal?: AbortSignal;
+};
+type Tool = {
+  functionDeclarations: Array<{
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  }>;
+};
+
+// Default model constants
+const DEFAULT_GEMINI_FLASH_MODEL = 'gpt-4o-mini';
+
 function isThinkingSupported(model: string) {
-  if (model.startsWith('gemini-2.5')) return true;
+  // OpenAI models don't have separate thinking mode
   return false;
 }
 
@@ -62,7 +87,7 @@ function isThinkingSupported(model: string) {
  * Exported for testing purposes.
  */
 export function findIndexAfterFraction(
-  history: Content[],
+  history: NomaContent[],
   fraction: number,
 ): number {
   if (fraction <= 0 || fraction >= 1) {
@@ -89,11 +114,11 @@ export function findIndexAfterFraction(
   return contentLengths.length;
 }
 
-export class GeminiClient {
-  private chat?: GeminiChat;
+export class NomaClient {
+  private chat?: NomaChat;
   private contentGenerator?: ContentGenerator;
   private embeddingModel: string;
-  private generateContentConfig: GenerateContentConfig = {
+  private generateContentConfig = {
     temperature: 0,
     topP: 1,
   };
@@ -149,7 +174,7 @@ export class GeminiClient {
     this.getChat().addHistory(content);
   }
 
-  getChat(): GeminiChat {
+  getChat(): NomaChat {
     if (!this.chat) {
       throw new Error('Chat not initialized');
     }
@@ -191,7 +216,7 @@ export class GeminiClient {
     });
   }
 
-  async startChat(extraHistory?: Content[]): Promise<GeminiChat> {
+  async startChat(extraHistory?: Content[]): Promise<NomaChat> {
     this.forceFullIdeContext = true;
     const envParts = await getEnvironmentContext(this.config);
     const toolRegistry = await this.config.getToolRegistry();
@@ -221,11 +246,11 @@ export class GeminiClient {
             },
           }
         : this.generateContentConfig;
-      return new GeminiChat(
+      return new NomaChat(
         this.config,
         this.getContentGenerator(),
         {
-          systemInstruction,
+          systemInstruction: { text: systemInstruction },
           ...generateContentConfigWithThinking,
           tools,
         },
@@ -234,7 +259,7 @@ export class GeminiClient {
     } catch (error) {
       await reportError(
         error,
-        'Error initializing Gemini chat session.',
+        'Error initializing Noma chat session.',
         history,
         'startChat',
       );
@@ -416,7 +441,7 @@ export class GeminiClient {
     prompt_id: string,
     turns: number = this.MAX_TURNS,
     originalModel?: string,
-  ): AsyncGenerator<ServerGeminiStreamEvent, Turn> {
+  ): AsyncGenerator<ServerNomaStreamEvent, Turn> {
     if (this.lastPromptId !== prompt_id) {
       this.loopDetector.reset(prompt_id);
       this.lastPromptId = prompt_id;
@@ -426,7 +451,7 @@ export class GeminiClient {
       this.config.getMaxSessionTurns() > 0 &&
       this.sessionTurnCount > this.config.getMaxSessionTurns()
     ) {
-      yield { type: GeminiEventType.MaxSessionTurns };
+      yield { type: NomaEventType.MaxSessionTurns };
       return new Turn(this.getChat(), prompt_id);
     }
     // Ensure turns never exceeds MAX_TURNS to prevent infinite loops
@@ -441,7 +466,7 @@ export class GeminiClient {
     const compressed = await this.tryCompressChat(prompt_id);
 
     if (compressed) {
-      yield { type: GeminiEventType.ChatCompressed, value: compressed };
+      yield { type: NomaEventType.ChatCompressed, value: compressed };
     }
 
     if (this.config.getIdeMode()) {
@@ -462,14 +487,14 @@ export class GeminiClient {
 
     const loopDetected = await this.loopDetector.turnStarted(signal);
     if (loopDetected) {
-      yield { type: GeminiEventType.LoopDetected };
+      yield { type: NomaEventType.LoopDetected };
       return turn;
     }
 
     const resultStream = turn.run(request, signal);
     for await (const event of resultStream) {
       if (this.loopDetector.addAndCheck(event)) {
-        yield { type: GeminiEventType.LoopDetected };
+        yield { type: NomaEventType.LoopDetected };
         return turn;
       }
       yield event;
@@ -537,7 +562,7 @@ export class GeminiClient {
             model: modelToUse,
             config: {
               ...requestConfig,
-              systemInstruction,
+              systemInstruction: { text: systemInstruction },
               responseJsonSchema: schema,
               responseMimeType: 'application/json',
             },
@@ -639,7 +664,7 @@ export class GeminiClient {
       const requestConfig = {
         abortSignal,
         ...configToUse,
-        systemInstruction,
+        systemInstruction: { text: systemInstruction },
       };
 
       const apiCall = () =>
@@ -768,9 +793,7 @@ export class GeminiClient {
 
     const { text: summary } = await this.getChat().sendMessage(
       {
-        message: {
-          text: 'First, reason in your scratchpad. Then, generate the <state_snapshot>.',
-        },
+        message: 'First, reason in your scratchpad. Then, generate the <state_snapshot>.',
         config: {
           systemInstruction: { text: getCompressionPrompt() },
         },

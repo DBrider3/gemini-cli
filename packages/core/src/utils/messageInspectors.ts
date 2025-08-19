@@ -4,20 +4,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Content } from '@google/genai';
+import { NomaContent } from '../core/contentGenerator.js';
+
+// Type alias for compatibility
+type Content = NomaContent;
 
 export function isFunctionResponse(content: Content): boolean {
+  // For OpenAI-compatible implementation, check if content has function response patterns
   return (
     content.role === 'user' &&
     !!content.parts &&
-    content.parts.every((part) => !!part.functionResponse)
+    content.parts.some((part) => 
+      part.text && (part.text.includes('function_result') || part.text.includes('tool_result'))
+    )
   );
 }
 
 export function isFunctionCall(content: Content): boolean {
+  // For OpenAI-compatible implementation, check if content has function call patterns
   return (
     content.role === 'model' &&
     !!content.parts &&
-    content.parts.every((part) => !!part.functionCall)
+    content.parts.some((part) => 
+      part.text && (part.text.includes('function_call') || part.text.includes('tool_call'))
+    )
   );
 }

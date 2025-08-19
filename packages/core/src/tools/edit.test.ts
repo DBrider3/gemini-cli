@@ -34,7 +34,7 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 import { ApprovalMode, Config } from '../config/config.js';
-import { Content, Part, SchemaUnion } from '@google/genai';
+import { Content, Part, SchemaUnion } from '../core/contentGenerator.js';
 import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 
 describe('EditTool', () => {

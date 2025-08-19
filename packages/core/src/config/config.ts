@@ -12,23 +12,23 @@ import {
   createContentGeneratorConfig,
 } from '../core/contentGenerator.js';
 import { PromptRegistry } from '../prompts/prompt-registry.js';
-import { ToolRegistry } from '../tools/tool-registry.js';
-import { LSTool } from '../tools/ls.js';
-import { ReadFileTool } from '../tools/read-file.js';
-import { GrepTool } from '../tools/grep.js';
-import { GlobTool } from '../tools/glob.js';
-import { EditTool } from '../tools/edit.js';
-import { ShellTool } from '../tools/shell.js';
-import { WriteFileTool } from '../tools/write-file.js';
-import { WebFetchTool } from '../tools/web-fetch.js';
-import { ReadManyFilesTool } from '../tools/read-many-files.js';
-import {
-  MemoryTool,
-  setGeminiMdFilename,
-  GEMINI_CONFIG_DIR as GEMINI_DIR,
-} from '../tools/memoryTool.js';
-import { WebSearchTool } from '../tools/web-search.js';
-import { GeminiClient } from '../core/client.js';
+// import { ToolRegistry } from '../tools/tool-registry.js';
+// import { LSTool } from '../tools/ls.js';
+// import { ReadFileTool } from '../tools/read-file.js';
+// import { GrepTool } from '../tools/grep.js';
+// import { GlobTool } from '../tools/glob.js';
+// import { EditTool } from '../tools/edit.js';
+// import { ShellTool } from '../tools/shell.js';
+// import { WriteFileTool } from '../tools/write-file.js';
+// import { WebFetchTool } from '../tools/web-fetch.js';
+// import { ReadManyFilesTool } from '../tools/read-many-files.js';
+// import {
+//   MemoryTool,
+//   setGeminiMdFilename,
+//   GEMINI_CONFIG_DIR as GEMINI_DIR,
+// } from '../tools/memoryTool.js';
+// import { WebSearchTool } from '../tools/web-search.js';
+import { NomaClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
 import { getProjectTempDir } from '../utils/paths.js';
@@ -47,7 +47,10 @@ import { ClearcutLogger } from '../telemetry/clearcut-logger/clearcut-logger.js'
 import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
 import { MCPOAuthConfig } from '../mcp/oauth-provider.js';
 import { IdeClient } from '../ide/ide-client.js';
-import type { Content } from '@google/genai';
+import type { NomaContent } from '../core/contentGenerator.js';
+
+// Type alias for compatibility
+type Content = NomaContent;
 import { logIdeConnection } from '../telemetry/loggers.js';
 import { IdeConnectionEvent, IdeConnectionType } from '../telemetry/types.js';
 
@@ -200,7 +203,7 @@ export interface ConfigParameters {
 }
 
 export class Config {
-  private toolRegistry!: ToolRegistry;
+  private toolRegistry!: any;
   private promptRegistry!: PromptRegistry;
   private readonly sessionId: string;
   private contentGeneratorConfig!: ContentGeneratorConfig;
@@ -224,7 +227,7 @@ export class Config {
   private readonly accessibility: AccessibilitySettings;
   private readonly telemetrySettings: TelemetrySettings;
   private readonly usageStatisticsEnabled: boolean;
-  private geminiClient!: GeminiClient;
+  private nomaClient!: NomaClient;
   private readonly fileFiltering: {
     respectGitIgnore: boolean;
     respectGeminiIgnore: boolean;
@@ -324,9 +327,9 @@ export class Config {
     this.chatCompression = params.chatCompression;
     this.interactive = params.interactive ?? false;
 
-    if (params.contextFileName) {
-      setGeminiMdFilename(params.contextFileName);
-    }
+    // if (params.contextFileName) {
+    //   setGeminiMdFilename(params.contextFileName);
+    // }
 
     if (this.telemetrySettings.enabled) {
       initializeTelemetry(this);
@@ -355,14 +358,20 @@ export class Config {
       await this.getGitService();
     }
     this.promptRegistry = new PromptRegistry();
-    this.toolRegistry = await this.createToolRegistry();
+    // this.toolRegistry = await this.createToolRegistry();
+    // Temporary stub for tool registry
+    this.toolRegistry = {
+      getFunctionDeclarations: () => [],
+      discoverAllTools: async () => {},
+      registerTool: () => {},
+    } as any;
   }
 
   async refreshAuth(authMethod: AuthType) {
     // Save the current conversation history before creating a new client
     let existingHistory: Content[] = [];
-    if (this.geminiClient && this.geminiClient.isInitialized()) {
-      existingHistory = this.geminiClient.getHistory();
+    if (this.nomaClient && this.nomaClient.isInitialized()) {
+      existingHistory = this.nomaClient.getHistory();
     }
 
     // Create new content generator config
@@ -372,16 +381,16 @@ export class Config {
     );
 
     // Create and initialize new client in local variable first
-    const newGeminiClient = new GeminiClient(this);
-    await newGeminiClient.initialize(newContentGeneratorConfig);
+    const newNomaClient = new NomaClient(this);
+    await newNomaClient.initialize(newContentGeneratorConfig);
 
     // Only assign to instance properties after successful initialization
     this.contentGeneratorConfig = newContentGeneratorConfig;
-    this.geminiClient = newGeminiClient;
+    this.nomaClient = newNomaClient;
 
     // Restore the conversation history to the new client
     if (existingHistory.length > 0) {
-      this.geminiClient.setHistory(existingHistory);
+      this.nomaClient.setHistory(existingHistory);
     }
 
     // Reset the session flag since we're explicitly changing auth and using default model
@@ -465,7 +474,7 @@ export class Config {
     return this.workspaceContext;
   }
 
-  getToolRegistry(): Promise<ToolRegistry> {
+  getToolRegistry(): Promise<any> {
     return Promise.resolve(this.toolRegistry);
   }
 
@@ -560,12 +569,17 @@ export class Config {
     return this.telemetrySettings.outfile;
   }
 
-  getGeminiClient(): GeminiClient {
-    return this.geminiClient;
+  getNomaClient(): NomaClient {
+    return this.nomaClient;
+  }
+
+  // Legacy compatibility method
+  getGeminiClient(): NomaClient {
+    return this.nomaClient;
   }
 
   getGeminiDir(): string {
-    return path.join(this.targetDir, GEMINI_DIR);
+    return path.join(this.targetDir, '.gemini');
   }
 
   getProjectTempDir(): string {
@@ -697,57 +711,57 @@ export class Config {
     return this.gitService;
   }
 
-  async createToolRegistry(): Promise<ToolRegistry> {
-    const registry = new ToolRegistry(this);
+  // async createToolRegistry(): Promise<ToolRegistry> {
+  //   const registry = new ToolRegistry(this);
 
-    // helper to create & register core tools that are enabled
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const registerCoreTool = (ToolClass: any, ...args: unknown[]) => {
-      const className = ToolClass.name;
-      const toolName = ToolClass.Name || className;
-      const coreTools = this.getCoreTools();
-      const excludeTools = this.getExcludeTools();
+  //   // helper to create & register core tools that are enabled
+  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   const registerCoreTool = (ToolClass: any, ...args: unknown[]) => {
+  //     const className = ToolClass.name;
+  //     const toolName = ToolClass.Name || className;
+  //     const coreTools = this.getCoreTools();
+  //     const excludeTools = this.getExcludeTools();
 
-      let isEnabled = false;
-      if (coreTools === undefined) {
-        isEnabled = true;
-      } else {
-        isEnabled = coreTools.some(
-          (tool) =>
-            tool === className ||
-            tool === toolName ||
-            tool.startsWith(`${className}(`) ||
-            tool.startsWith(`${toolName}(`),
-        );
-      }
+  //     let isEnabled = false;
+  //     if (coreTools === undefined) {
+  //       isEnabled = true;
+  //     } else {
+  //       isEnabled = coreTools.some(
+  //         (tool) =>
+  //           tool === className ||
+  //           tool === toolName ||
+  //           tool.startsWith(`${className}(`) ||
+  //           tool.startsWith(`${toolName}(`),
+  //       );
+  //     }
 
-      if (
-        excludeTools?.includes(className) ||
-        excludeTools?.includes(toolName)
-      ) {
-        isEnabled = false;
-      }
+  //     if (
+  //       excludeTools?.includes(className) ||
+  //       excludeTools?.includes(toolName)
+  //     ) {
+  //       isEnabled = false;
+  //     }
 
-      if (isEnabled) {
-        registry.registerTool(new ToolClass(...args));
-      }
-    };
+  //     if (isEnabled) {
+  //       registry.registerTool(new ToolClass(...args));
+  //     }
+  //   };
 
-    registerCoreTool(LSTool, this);
-    registerCoreTool(ReadFileTool, this);
-    registerCoreTool(GrepTool, this);
-    registerCoreTool(GlobTool, this);
-    registerCoreTool(EditTool, this);
-    registerCoreTool(WriteFileTool, this);
-    registerCoreTool(WebFetchTool, this);
-    registerCoreTool(ReadManyFilesTool, this);
-    registerCoreTool(ShellTool, this);
-    registerCoreTool(MemoryTool);
-    registerCoreTool(WebSearchTool, this);
+  //   registerCoreTool(LSTool, this);
+  //   registerCoreTool(ReadFileTool, this);
+  //   registerCoreTool(GrepTool, this);
+  //   registerCoreTool(GlobTool, this);
+  //   registerCoreTool(EditTool, this);
+  //   registerCoreTool(WriteFileTool, this);
+  //   // registerCoreTool(WebFetchTool, this);
+  //   registerCoreTool(ReadManyFilesTool, this);
+  //   registerCoreTool(ShellTool, this);
+  //   registerCoreTool(MemoryTool);
+  //   // registerCoreTool(WebSearchTool, this);
 
-    await registry.discoverAllTools();
-    return registry;
-  }
+  //   await registry.discoverAllTools();
+  //   return registry;
+  // }
 }
 // Export model constants for use in CLI
 export { DEFAULT_GEMINI_FLASH_MODEL };

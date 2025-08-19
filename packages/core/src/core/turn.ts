@@ -4,13 +4,33 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  PartListUnion,
-  GenerateContentResponse,
-  FunctionCall,
-  FunctionDeclaration,
-  FinishReason,
-} from '@google/genai';
+// OpenAI compatible types
+type PartListUnion = { text: string }[];
+type GenerateContentResponse = {
+  candidates?: Array<{
+    content: {
+      role: 'user' | 'model' | 'system';
+      parts: Array<{ text?: string; thought?: boolean }>;
+    };
+    finishReason?: string;
+  }>;
+  functionCalls?: Array<{
+    id?: string;
+    name: string;
+    args?: Record<string, unknown>;
+  }>;
+};
+type FunctionCall = {
+  id?: string;
+  name: string;
+  args?: Record<string, unknown>;
+};
+type FunctionDeclaration = {
+  name: string;
+  description?: string;
+  parameters?: Record<string, unknown>;
+};
+type FinishReason = string;
 import {
   ToolCallConfirmationDetails,
   ToolResult,
@@ -24,7 +44,7 @@ import {
   UnauthorizedError,
   toFriendlyError,
 } from '../utils/errors.js';
-import { GeminiChat } from './geminiChat.js';
+import { NomaChat } from './nomaChat.js';
 
 // Define a structure for tools passed to the server
 export interface ServerTool {
@@ -41,7 +61,7 @@ export interface ServerTool {
   ): Promise<ToolCallConfirmationDetails | false>;
 }
 
-export enum GeminiEventType {
+export enum NomaEventType {
   Content = 'content',
   ToolCallRequest = 'tool_call_request',
   ToolCallResponse = 'tool_call_response',
@@ -60,7 +80,7 @@ export interface StructuredError {
   status?: number;
 }
 
-export interface GeminiErrorEventValue {
+export interface NomaErrorEventValue {
   error: StructuredError;
 }
 
@@ -90,38 +110,38 @@ export type ThoughtSummary = {
   description: string;
 };
 
-export type ServerGeminiContentEvent = {
-  type: GeminiEventType.Content;
+export type ServerNomaContentEvent = {
+  type: NomaEventType.Content;
   value: string;
 };
 
-export type ServerGeminiThoughtEvent = {
-  type: GeminiEventType.Thought;
+export type ServerNomaThoughtEvent = {
+  type: NomaEventType.Thought;
   value: ThoughtSummary;
 };
 
-export type ServerGeminiToolCallRequestEvent = {
-  type: GeminiEventType.ToolCallRequest;
+export type ServerNomaToolCallRequestEvent = {
+  type: NomaEventType.ToolCallRequest;
   value: ToolCallRequestInfo;
 };
 
-export type ServerGeminiToolCallResponseEvent = {
-  type: GeminiEventType.ToolCallResponse;
+export type ServerNomaToolCallResponseEvent = {
+  type: NomaEventType.ToolCallResponse;
   value: ToolCallResponseInfo;
 };
 
-export type ServerGeminiToolCallConfirmationEvent = {
-  type: GeminiEventType.ToolCallConfirmation;
+export type ServerNomaToolCallConfirmationEvent = {
+  type: NomaEventType.ToolCallConfirmation;
   value: ServerToolCallConfirmationDetails;
 };
 
-export type ServerGeminiUserCancelledEvent = {
-  type: GeminiEventType.UserCancelled;
+export type ServerNomaUserCancelledEvent = {
+  type: NomaEventType.UserCancelled;
 };
 
-export type ServerGeminiErrorEvent = {
-  type: GeminiEventType.Error;
-  value: GeminiErrorEventValue;
+export type ServerNomaErrorEvent = {
+  type: NomaEventType.Error;
+  value: NomaErrorEventValue;
 };
 
 export interface ChatCompressionInfo {
@@ -129,37 +149,37 @@ export interface ChatCompressionInfo {
   newTokenCount: number;
 }
 
-export type ServerGeminiChatCompressedEvent = {
-  type: GeminiEventType.ChatCompressed;
+export type ServerNomaChatCompressedEvent = {
+  type: NomaEventType.ChatCompressed;
   value: ChatCompressionInfo | null;
 };
 
-export type ServerGeminiMaxSessionTurnsEvent = {
-  type: GeminiEventType.MaxSessionTurns;
+export type ServerNomaMaxSessionTurnsEvent = {
+  type: NomaEventType.MaxSessionTurns;
 };
 
-export type ServerGeminiFinishedEvent = {
-  type: GeminiEventType.Finished;
+export type ServerNomaFinishedEvent = {
+  type: NomaEventType.Finished;
   value: FinishReason;
 };
 
-export type ServerGeminiLoopDetectedEvent = {
-  type: GeminiEventType.LoopDetected;
+export type ServerNomaLoopDetectedEvent = {
+  type: NomaEventType.LoopDetected;
 };
 
 // The original union type, now composed of the individual types
-export type ServerGeminiStreamEvent =
-  | ServerGeminiContentEvent
-  | ServerGeminiToolCallRequestEvent
-  | ServerGeminiToolCallResponseEvent
-  | ServerGeminiToolCallConfirmationEvent
-  | ServerGeminiUserCancelledEvent
-  | ServerGeminiErrorEvent
-  | ServerGeminiChatCompressedEvent
-  | ServerGeminiThoughtEvent
-  | ServerGeminiMaxSessionTurnsEvent
-  | ServerGeminiFinishedEvent
-  | ServerGeminiLoopDetectedEvent;
+export type ServerNomaStreamEvent =
+  | ServerNomaContentEvent
+  | ServerNomaToolCallRequestEvent
+  | ServerNomaToolCallResponseEvent
+  | ServerNomaToolCallConfirmationEvent
+  | ServerNomaUserCancelledEvent
+  | ServerNomaErrorEvent
+  | ServerNomaChatCompressedEvent
+  | ServerNomaThoughtEvent
+  | ServerNomaMaxSessionTurnsEvent
+  | ServerNomaFinishedEvent
+  | ServerNomaLoopDetectedEvent;
 
 // A turn manages the agentic loop turn within the server context.
 export class Turn {
@@ -168,7 +188,7 @@ export class Turn {
   finishReason: FinishReason | undefined;
 
   constructor(
-    private readonly chat: GeminiChat,
+    private readonly chat: NomaChat,
     private readonly prompt_id: string,
   ) {
     this.pendingToolCalls = [];
@@ -179,7 +199,7 @@ export class Turn {
   async *run(
     req: PartListUnion,
     signal: AbortSignal,
-  ): AsyncGenerator<ServerGeminiStreamEvent> {
+  ): AsyncGenerator<ServerNomaStreamEvent> {
     try {
       const responseStream = await this.chat.sendMessageStream(
         {
@@ -193,7 +213,7 @@ export class Turn {
 
       for await (const resp of responseStream) {
         if (signal?.aborted) {
-          yield { type: GeminiEventType.UserCancelled };
+          yield { type: NomaEventType.UserCancelled };
           // Do not add resp to debugResponses if aborted before processing
           return;
         }
@@ -215,7 +235,7 @@ export class Turn {
           };
 
           yield {
-            type: GeminiEventType.Thought,
+            type: NomaEventType.Thought,
             value: thought,
           };
           continue;
@@ -223,7 +243,7 @@ export class Turn {
 
         const text = getResponseText(resp);
         if (text) {
-          yield { type: GeminiEventType.Content, value: text };
+          yield { type: NomaEventType.Content, value: text };
         }
 
         // Handle function calls (requesting tool execution)
@@ -241,7 +261,7 @@ export class Turn {
         if (finishReason) {
           this.finishReason = finishReason;
           yield {
-            type: GeminiEventType.Finished,
+            type: NomaEventType.Finished,
             value: finishReason as FinishReason,
           };
         }
@@ -252,7 +272,7 @@ export class Turn {
         throw error;
       }
       if (signal.aborted) {
-        yield { type: GeminiEventType.UserCancelled };
+        yield { type: NomaEventType.UserCancelled };
         // Regular cancellation error, fail gracefully.
         return;
       }
@@ -260,7 +280,7 @@ export class Turn {
       const contextForReport = [...this.chat.getHistory(/*curated*/ true), req];
       await reportError(
         error,
-        'Error when talking to Gemini API',
+        'Error when talking to Noma API',
         contextForReport,
         'Turn.run-sendMessageStream',
       );
@@ -276,14 +296,14 @@ export class Turn {
         status,
       };
       await this.chat.maybeIncludeSchemaDepthContext(structuredError);
-      yield { type: GeminiEventType.Error, value: { error: structuredError } };
+      yield { type: NomaEventType.Error, value: { error: structuredError } };
       return;
     }
   }
 
   private handlePendingFunctionCall(
     fnCall: FunctionCall,
-  ): ServerGeminiStreamEvent | null {
+  ): ServerNomaStreamEvent | null {
     const callId =
       fnCall.id ??
       `${fnCall.name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -301,7 +321,7 @@ export class Turn {
     this.pendingToolCalls.push(toolCallRequest);
 
     // Yield a request for the tool call, not the pending/confirming status
-    return { type: GeminiEventType.ToolCallRequest, value: toolCallRequest };
+    return { type: NomaEventType.ToolCallRequest, value: toolCallRequest };
   }
 
   getDebugResponses(): GenerateContentResponse[] {

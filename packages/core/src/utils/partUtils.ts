@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GenerateContentResponse, PartListUnion, Part } from '@google/genai';
+import { NomaGenerateContentResponse } from '../core/contentGenerator.js';
+
+// Type aliases for compatibility
+type GenerateContentResponse = NomaGenerateContentResponse;
+type PartListUnion = { text: string }[] | string;
+type Part = { text?: string; thought?: boolean };
 
 /**
  * Converts a PartListUnion into a string.

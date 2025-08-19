@@ -273,7 +273,7 @@ export const SETTINGS_SCHEMA = {
     label: 'Selected Auth Type',
     category: 'Advanced',
     requiresRestart: true,
-    default: undefined as AuthType | undefined,
+    default: AuthType.USE_OPENAI,
     description: 'The currently selected authentication type.',
     showInDialog: false,
   },

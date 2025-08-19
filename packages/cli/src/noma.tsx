@@ -33,7 +33,6 @@ import {
   sessionId,
   logUserPrompt,
   AuthType,
-  getOauthClient,
   logIdeConnection,
   IdeConnectionEvent,
   IdeConnectionType,
@@ -242,13 +241,6 @@ export async function main() {
     }
   }
 
-  if (
-    settings.merged.selectedAuthType === AuthType.LOGIN_WITH_GOOGLE &&
-    config.isBrowserLaunchSuppressed()
-  ) {
-    // Do oauth before app renders to make copying the link possible.
-    await getOauthClient(settings.merged.selectedAuthType, config);
-  }
 
   if (config.getExperimentalAcp()) {
     return runAcpPeer(config, settings);

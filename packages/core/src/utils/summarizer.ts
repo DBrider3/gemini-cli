@@ -5,12 +5,18 @@
  */
 
 import { ToolResult } from '../tools/tools.js';
-import {
-  Content,
-  GenerateContentConfig,
-  GenerateContentResponse,
-} from '@google/genai';
-import { GeminiClient } from '../core/client.js';
+import { NomaClient } from '../core/client.js';
+import { NomaContent, NomaGenerateContentResponse } from '../core/contentGenerator.js';
+
+// Type aliases for compatibility
+type Content = NomaContent;
+type GenerateContentConfig = {
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  systemInstruction?: { text: string };
+};
+type GenerateContentResponse = NomaGenerateContentResponse;
 import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from '../config/models.js';
 import { getResponseText, partToString } from './partUtils.js';
 
@@ -22,7 +28,7 @@ import { getResponseText, partToString } from './partUtils.js';
  */
 export type Summarizer = (
   result: ToolResult,
-  geminiClient: GeminiClient,
+  nomaClient: NomaClient,
   abortSignal: AbortSignal,
 ) => Promise<string>;
 
@@ -30,13 +36,13 @@ export type Summarizer = (
  * The default summarizer for tool results.
  *
  * @param result The result of the tool execution.
- * @param geminiClient The Gemini client to use for summarization.
+ * @param nomaClient The Noma client to use for summarization.
  * @param abortSignal The abort signal to use for summarization.
  * @returns The summary of the result.
  */
 export const defaultSummarizer: Summarizer = (
   result: ToolResult,
-  _geminiClient: GeminiClient,
+  _nomaClient: NomaClient,
   _abortSignal: AbortSignal,
 ) => Promise.resolve(JSON.stringify(result.llmContent));
 
@@ -54,16 +60,16 @@ Text to summarize:
 Return the summary string which should first contain an overall summarization of text followed by the full stack trace of errors and warnings in the tool output.
 `;
 
-export const llmSummarizer: Summarizer = (result, geminiClient, abortSignal) =>
+export const llmSummarizer: Summarizer = (result, nomaClient, abortSignal) =>
   summarizeToolOutput(
     partToString(result.llmContent),
-    geminiClient,
+    nomaClient,
     abortSignal,
   );
 
 export async function summarizeToolOutput(
   textToSummarize: string,
-  geminiClient: GeminiClient,
+  nomaClient: NomaClient,
   abortSignal: AbortSignal,
   maxOutputTokens: number = 2000,
 ): Promise<string> {
@@ -79,10 +85,11 @@ export async function summarizeToolOutput(
 
   const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
   const toolOutputSummarizerConfig: GenerateContentConfig = {
-    maxOutputTokens,
+    maxTokens: maxOutputTokens,
+    temperature: 0,
   };
   try {
-    const parsedResponse = (await geminiClient.generateContent(
+    const parsedResponse = (await nomaClient.generateContent(
       contents,
       toolOutputSummarizerConfig,
       abortSignal,

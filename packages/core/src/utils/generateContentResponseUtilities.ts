@@ -4,7 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GenerateContentResponse, Part, FunctionCall } from '@google/genai';
+import { NomaGenerateContentResponse } from '../core/contentGenerator.js';
+
+// Type aliases for compatibility
+type GenerateContentResponse = NomaGenerateContentResponse;
+type Part = { text?: string; functionCall?: FunctionCall };
+type FunctionCall = {
+  id?: string;
+  name: string;
+  args?: Record<string, unknown>;
+};
 
 export function getResponseText(
   response: GenerateContentResponse,

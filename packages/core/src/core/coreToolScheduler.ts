@@ -22,7 +22,7 @@ import {
   AnyDeclarativeTool,
   AnyToolInvocation,
 } from '../index.js';
-import { Part, PartListUnion } from '@google/genai';
+import { Part, PartListUnion } from '../core/contentGenerator.js';
 import { getResponseTextFromParts } from '../utils/generateContentResponseUtilities.js';
 import {
   isModifiableDeclarativeTool,

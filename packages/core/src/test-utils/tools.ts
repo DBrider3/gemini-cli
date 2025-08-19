@@ -11,7 +11,6 @@ import {
   ToolCallConfirmationDetails,
   ToolResult,
 } from '../tools/tools.js';
-import { Schema, Type } from '@google/genai';
 
 /**
  * A highly configurable mock tool for testing purposes.

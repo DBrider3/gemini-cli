@@ -12,7 +12,7 @@ import {
   EmbedContentResponse,
   GenerateContentResponse,
   GoogleGenAI,
-} from '@google/genai';
+} from '../core/contentGenerator.js';
 import { findIndexAfterFraction, GeminiClient } from './client.js';
 import { AuthType, ContentGenerator } from './contentGenerator.js';
 import { GeminiChat } from './geminiChat.js';

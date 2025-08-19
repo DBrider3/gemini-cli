@@ -4,25 +4,61 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// DISCLAIMER: This is a copied version of https://github.com/googleapis/js-genai/blob/main/src/chats.ts with the intention of working around a key bug
-// where function responses are not treated as "valid" responses: https://b.corp.google.com/issues/420354090
+// DISCLAIMER: This is adapted from a Gemini chat implementation to work with OpenAI-compatible APIs
 
-import {
-  GenerateContentResponse,
-  Content,
-  GenerateContentConfig,
-  SendMessageParameters,
-  createUserContent,
-  Part,
-  Tool,
-} from '@google/genai';
 import { retryWithBackoff } from '../utils/retry.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
-import { ContentGenerator, AuthType } from './contentGenerator.js';
+import { 
+  ContentGenerator, 
+  AuthType,
+  NomaContent,
+  NomaGenerateContentResponse
+} from './contentGenerator.js';
 import { Config } from '../config/config.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { hasCycleInSchema } from '../tools/tools.js';
 import { StructuredError } from './turn.js';
+
+// OpenAI compatible types
+type GenerateContentResponse = NomaGenerateContentResponse;
+type Content = NomaContent;
+type GenerateContentConfig = {
+  temperature?: number;
+  topP?: number;
+  maxTokens?: number;
+  systemInstruction?: { text: string };
+  responseJsonSchema?: Record<string, unknown>;
+  responseMimeType?: string;
+  abortSignal?: AbortSignal;
+  tools?: Tool[];
+};
+type SendMessageParameters = {
+  message: { text: string }[] | string;
+  config?: GenerateContentConfig;
+};
+type Part = { text?: string; thought?: boolean };
+type Tool = {
+  functionDeclarations: Array<{
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  }>;
+};
+
+// Default model constants
+const DEFAULT_GEMINI_FLASH_MODEL = 'gpt-4o-mini';
+
+function createUserContent(message: { text: string }[] | string): Content {
+  if (typeof message === 'string') {
+    return {
+      role: 'user',
+      parts: [{ text: message }],
+    };
+  }
+  return {
+    role: 'user',
+    parts: message,
+  };
+}
 
 /**
  * Returns true if the response is valid, false otherwise.
@@ -114,7 +150,7 @@ function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
  * @remarks
  * The session maintains all the turns between user and model.
  */
-export class GeminiChat {
+export class NomaChat {
   // A promise to represent the current state of the message being sent to the
   // model.
   private sendPromise: Promise<void> = Promise.resolve();
@@ -137,7 +173,7 @@ export class GeminiChat {
     error?: unknown,
   ): Promise<string | null> {
     // Only handle fallback for OAuth users
-    if (authType !== AuthType.LOGIN_WITH_GOOGLE) {
+    if (authType !== AuthType.USE_OPENAI) {
       return null;
     }
 
@@ -176,7 +212,7 @@ export class GeminiChat {
   }
 
   setSystemInstruction(sysInstr: string) {
-    this.generationConfig.systemInstruction = sysInstr;
+    this.generationConfig.systemInstruction = { text: sysInstr };
   }
   /**
    * Sends a message to the model and returns the response.
@@ -191,7 +227,7 @@ export class GeminiChat {
    *
    * @example
    * ```ts
-   * const chat = ai.chats.create({model: 'gemini-2.0-flash'});
+   * const chat = ai.chats.create({model: 'gpt-4o-mini'});
    * const response = await chat.sendMessage({
    *   message: 'Why is the sky blue?'
    * });
@@ -252,8 +288,7 @@ export class GeminiChat {
         // Because the AFC input contains the entire curated chat history in
         // addition to the new user input, we need to truncate the AFC history
         // to deduplicate the existing chat history.
-        const fullAutomaticFunctionCallingHistory =
-          response.automaticFunctionCallingHistory;
+        const fullAutomaticFunctionCallingHistory: Content[] = [];
         const index = this.getHistory(true).length;
         let automaticFunctionCallingHistory: Content[] = [];
         if (fullAutomaticFunctionCallingHistory != null) {
@@ -291,7 +326,7 @@ export class GeminiChat {
    *
    * @example
    * ```ts
-   * const chat = ai.chats.create({model: 'gemini-2.0-flash'});
+   * const chat = ai.chats.create({model: 'gpt-4o-mini'});
    * const response = await chat.sendMessageStream({
    *   message: 'Why is the sky blue?'
    * });

@@ -11,7 +11,7 @@ import {
   ServerGeminiToolCallRequestEvent,
   ServerGeminiErrorEvent,
 } from './turn.js';
-import { GenerateContentResponse, Part, Content } from '@google/genai';
+import { GenerateContentResponse, Part, Content } from '../core/contentGenerator.js';
 import { reportError } from '../utils/errorReporting.js';
 import { GeminiChat } from './geminiChat.js';
 

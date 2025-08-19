@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Content } from '@google/genai';
 import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
-import { GeminiClient } from '../core/client.js';
-import { GeminiChat } from '../core/geminiChat.js';
+import { NomaClient } from '../core/client.js';
+import { NomaChat } from '../core/nomaChat.js';
+import { NomaContent } from '../core/contentGenerator.js';
 import { isFunctionResponse } from './messageInspectors.js';
+
+// Type alias for compatibility
+type Content = NomaContent;
 
 const CHECK_PROMPT = `Analyze *only* the content and structure of your immediately preceding response (your last turn in the conversation history). Based *strictly* on that response, determine who should logically speak next: the 'user' or the 'model' (you).
 **Decision Rules (apply in order):**
@@ -40,8 +43,8 @@ export interface NextSpeakerResponse {
 }
 
 export async function checkNextSpeaker(
-  chat: GeminiChat,
-  geminiClient: GeminiClient,
+  chat: NomaChat,
+  nomaClient: NomaClient,
   abortSignal: AbortSignal,
 ): Promise<NextSpeakerResponse | null> {
   // We need to capture the curated history because there are many moments when the model will return invalid turns
@@ -108,24 +111,15 @@ export async function checkNextSpeaker(
   ];
 
   try {
-    const parsedResponse = (await geminiClient.generateJson(
-      contents,
-      RESPONSE_SCHEMA,
-      abortSignal,
-      DEFAULT_GEMINI_FLASH_MODEL,
-    )) as unknown as NextSpeakerResponse;
-
-    if (
-      parsedResponse &&
-      parsedResponse.next_speaker &&
-      ['user', 'model'].includes(parsedResponse.next_speaker)
-    ) {
-      return parsedResponse;
-    }
-    return null;
+    // For OpenAI-compatible servers, always assume conversation should end with user
+    // This avoids the need for a separate JSON generation API call that may not be supported
+    return {
+      reasoning: 'Conversation complete, waiting for user input.',
+      next_speaker: 'user'
+    };
   } catch (error) {
     console.warn(
-      'Failed to talk to Gemini endpoint when seeing if conversation should continue.',
+      'Failed to talk to Noma endpoint when seeing if conversation should continue.',
       error,
     );
     return null;

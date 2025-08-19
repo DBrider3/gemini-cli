@@ -5,7 +5,7 @@
  */
 
 import { createHash } from 'crypto';
-import { GeminiEventType, ServerGeminiStreamEvent } from '../core/turn.js';
+import { NomaEventType, ServerNomaStreamEvent } from '../core/turn.js';
 import { logLoopDetected } from '../telemetry/loggers.js';
 import { LoopDetectedEvent, LoopType } from '../telemetry/types.js';
 import { Config, DEFAULT_GEMINI_FLASH_MODEL } from '../config/config.js';
@@ -82,19 +82,19 @@ export class LoopDetectionService {
    * @param event - The stream event to process
    * @returns true if a loop is detected, false otherwise
    */
-  addAndCheck(event: ServerGeminiStreamEvent): boolean {
+  addAndCheck(event: ServerNomaStreamEvent): boolean {
     if (this.loopDetected) {
       return true;
     }
 
     switch (event.type) {
-      case GeminiEventType.ToolCallRequest:
+      case NomaEventType.ToolCallRequest:
         // content chanting only happens in one single stream, reset if there
         // is a tool call in between
         this.resetContentTracking();
         this.loopDetected = this.checkToolCallLoop(event.value);
         break;
-      case GeminiEventType.Content:
+      case NomaEventType.Content:
         this.loopDetected = this.checkContentLoop(event.value);
         break;
       default:
@@ -320,7 +320,7 @@ export class LoopDetectionService {
 
   private async checkForLoopWithLLM(signal: AbortSignal) {
     const recentHistory = this.config
-      .getGeminiClient()
+      .getNomaClient()
       .getHistory()
       .slice(-LLM_LOOP_CHECK_HISTORY_COUNT);
 
@@ -359,7 +359,7 @@ Please analyze the conversation history to determine the possibility that the co
     let result;
     try {
       result = await this.config
-        .getGeminiClient()
+        .getNomaClient()
         .generateJson(contents, schema, signal, DEFAULT_GEMINI_FLASH_MODEL);
     } catch (e) {
       // Do nothing, treat it as a non-loop.

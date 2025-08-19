@@ -12,7 +12,7 @@ import {
   ContentGenerator,
 } from './contentGenerator.js';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from '../core/contentGenerator.js';
 import { Config } from '../config/config.js';
 import { LoggingContentGenerator } from './loggingContentGenerator.js';
 

@@ -11,7 +11,7 @@ import {
   GenerateContentConfig,
   Part,
   GenerateContentResponse,
-} from '@google/genai';
+} from '../core/contentGenerator.js';
 import { GeminiChat } from './geminiChat.js';
 import { Config } from '../config/config.js';
 import { setSimulate429 } from '../utils/testUtils.js';

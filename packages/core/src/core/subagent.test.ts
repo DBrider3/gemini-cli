@@ -28,7 +28,7 @@ import {
   FunctionDeclaration,
   GenerateContentConfig,
   Type,
-} from '@google/genai';
+} from '../core/contentGenerator.js';
 import { ToolErrorType } from '../tools/tool-error.js';
 
 vi.mock('./geminiChat.js');

@@ -22,7 +22,7 @@ import {
   Icon,
   ApprovalMode,
 } from '../index.js';
-import { Part, PartListUnion } from '@google/genai';
+import { Part, PartListUnion } from '../core/contentGenerator.js';
 
 import {
   ModifiableDeclarativeTool,

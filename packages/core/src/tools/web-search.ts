@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GroundingMetadata } from '@google/genai';
+import { GroundingMetadata } from '../core/contentGenerator.js';
 import { BaseTool, Icon, ToolResult } from './tools.js';
-import { Type } from '@google/genai';
+import { Type } from '../core/contentGenerator.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 
 import { getErrorMessage } from '../utils/errors.js';
@@ -118,7 +118,7 @@ export class WebSearchTool extends BaseTool<
         returnDisplay: validationError,
       };
     }
-    const geminiClient = this.config.getGeminiClient();
+    const geminiClient = this.config.getNomaClient();
 
     try {
       const response = await geminiClient.generateContent(

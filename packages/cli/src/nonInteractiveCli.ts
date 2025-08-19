@@ -11,10 +11,12 @@ import {
   ToolRegistry,
   shutdownTelemetry,
   isTelemetrySdkInitialized,
-  GeminiEventType,
+  NomaEventType,
   ToolErrorType,
+  Content,
+  Part,
+  FunctionCall,
 } from '@noma/noma-cli-core';
-import { Content, Part, FunctionCall } from '@google/genai';
 
 import { parseAndFormatApiError } from './ui/utils/errorParsing.js';
 import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
@@ -59,6 +61,7 @@ export async function runNonInteractive(
         return;
       }
       const functionCalls: FunctionCall[] = [];
+      let previousContent = ''; // Track previously output content
 
       const responseStream = geminiClient.sendMessageStream(
         currentMessages[0]?.parts || [],
@@ -72,9 +75,21 @@ export async function runNonInteractive(
           return;
         }
 
-        if (event.type === GeminiEventType.Content) {
-          process.stdout.write(event.value);
-        } else if (event.type === GeminiEventType.ToolCallRequest) {
+        if (event.type === NomaEventType.Content) {
+          // Only output the new content, not the entire accumulated content
+          const currentContent = event.value;
+          if (currentContent.startsWith(previousContent)) {
+            const newContent = currentContent.slice(previousContent.length);
+            if (newContent) {
+              process.stdout.write(newContent);
+              previousContent = currentContent;
+            }
+          } else {
+            // If content doesn't start with previous content, output as is (fallback)
+            process.stdout.write(currentContent);
+            previousContent = currentContent;
+          }
+        } else if (event.type === NomaEventType.ToolCallRequest) {
           const toolCallRequest = event.value;
           const fc: FunctionCall = {
             name: toolCallRequest.name,

@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@noma/noma-cli-core": "file:../core",
-    "@google/genai": "1.9.0",
+    "openai": "^4.72.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.15.1",
     "@types/update-notifier": "^6.0.8",

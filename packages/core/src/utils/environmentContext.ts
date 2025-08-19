@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Part } from '@google/genai';
+// Type alias for compatibility
+type PartUnion = { text?: string } | string;
+type Part = { text?: string };
 import { Config } from '../config/config.js';
 import { getFolderStructure } from './getFolderStructure.js';
 
@@ -58,13 +60,17 @@ export async function getEnvironmentContext(config: Config): Promise<Part[]> {
     day: 'numeric',
   });
   const platform = process.platform;
-  const directoryContext = await getDirectoryContextString(config);
+  
+  // Simplified context for OpenAI-compatible servers to reduce request size
+  const workspaceContext = config.getWorkspaceContext();
+  const workspaceDirectories = workspaceContext.getDirectories();
+  const workingDir = workspaceDirectories[0] || process.cwd();
 
   const context = `
-This is the Gemini CLI. We are setting up the context for our chat.
+This is the noma CLI. We are setting up the context for our chat.
 Today's date is ${today}.
 My operating system is: ${platform}
-${directoryContext}
+I'm currently working in the directory: ${workingDir}
         `.trim();
 
   const initialParts: Part[] = [{ text: context }];

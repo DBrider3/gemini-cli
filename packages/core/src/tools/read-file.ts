@@ -16,7 +16,7 @@ import {
   ToolResult,
 } from './tools.js';
 import { ToolErrorType } from './tool-error.js';
-import { PartUnion } from '@google/genai';
+import { PartUnion } from '../core/contentGenerator.js';
 import {
   processSingleFileContent,
   getSpecificMimeType,
